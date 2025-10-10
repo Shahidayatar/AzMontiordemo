@@ -254,16 +254,7 @@ class AzureDashboard {
             
             if (!response.ok) {
                 console.error('❌ Response not OK:', response.status, response.statusText);
-                // Fallback to sample data if real data is not available
-                if (response.status === 500) {
-                    console.log('📝 Falling back to sample data...');
-                    const sampleResponse = await fetch('/stats/sample');
-                    const sampleData = await sampleResponse.json();
-                    this.updateDashboard(sampleData, true);
-                    this.showToast('Using sample data - configure Application Insights for real data', 'warning');
-                } else {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             } else {
                 console.log('✅ Response OK, parsing data...');
                 const data = await response.json();
@@ -292,15 +283,6 @@ class AzureDashboard {
             } else {
                 this.updateStatus('error');
                 this.showToast('Failed to load data - check your connection and Application Insights configuration', 'error');
-                
-                // Try to load sample data as fallback
-                try {
-                    const sampleResponse = await fetch('/stats/sample');
-                    const sampleData = await sampleResponse.json();
-                    this.updateDashboard(sampleData, true);
-                } catch (fallbackError) {
-                    console.error('Even sample data failed:', fallbackError);
-                }
             }
         } finally {
             this.isLoading = false;
@@ -352,10 +334,7 @@ class AzureDashboard {
         this.updateRequestsChart(data.requestCounts || data.requestsPerMinute || [], data.failedRequests || data.failedRequestsPerMinute || []);
         this.updateResponseTimeChart(data.responseTimes || data.responseTimePerMinute || []);
         this.updateSlowestEndpointsChart(data.slowestEndpoints || []);
-        
-        if (isSampleData) {
-            this.showToast('Displaying sample data - configure Application Insights for real telemetry', 'warning');
-        }
+
     }
 
     updateRequestsChart(requestsData, failedRequestsData) {
