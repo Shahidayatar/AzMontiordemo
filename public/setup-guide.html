@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Guide - Application Insights Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .setup-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .setup-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .setup-header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .setup-header p {
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+        
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .step h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+        
+        .step-content {
+            margin-left: 10px;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .success-box h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .screenshot-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 4px;
+            padding: 40px;
+            text-align: center;
+            color: #6c757d;
+            margin: 15px 0;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">← Back to Dashboard</a>
+    
+    <div class="setup-container">
+        <div class="setup-card">
+            <div class="setup-header">
+                <h1>📋 Application Insights Setup Guide</h1>
+                <p>Complete step-by-step guide to configure your Application Insights Dashboard</p>
+            </div>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Create Application Insights Resource</h3>
+                    <p><strong>Go to Azure Portal:</strong></p>
+                    <ol>
+                        <li>Navigate to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a></li>
+                        <li>Click <strong>"Create a resource"</strong></li>
+                        <li>Search for <strong>"Application Insights"</strong></li>
+                        <li>Click <strong>"Create"</strong></li>
+                        <li>Fill in the details:
+                            <ul>
+                                <li><strong>Subscription:</strong> Your Azure subscription</li>
+                                <li><strong>Resource Group:</strong> Create new or use existing</li>
+                                <li><strong>Name:</strong> e.g., "my-app-insights"</li>
+                                <li><strong>Region:</strong> Choose closest to your app</li>
+                                <li><strong>Resource Mode:</strong> Workspace-based</li>
+                            </ul>
+                        </li>
+                        <li>Click <strong>"Review + Create"</strong> → <strong>"Create"</strong></li>
+                    </ol>
+                    
+                    <div class="screenshot-placeholder">
+                        📸 Screenshot: Azure Portal > Create Application Insights
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Get Connection String</h3>
+                    <p><strong>From your Application Insights resource:</strong></p>
+                    <ol>
+                        <li>Go to your Application Insights resource</li>
+                        <li>In the left menu, click <strong>"Overview"</strong></li>
+                        <li>Find <strong>"Connection String"</strong> in the Essentials section</li>
+                        <li>Click the <strong>copy button</strong> next to the connection string</li>
+                    </ol>
+                    
+                    <div class="code-block">
+InstrumentationKey=01234567-89ab-cdef-0123-456789abcdef;IngestionEndpoint=https://polandcentral-0.in.applicationinsights.azure.com/;LiveEndpoint=https://polandcentral.livediagnostics.monitor.azure.com/;ApplicationId=01234567-89ab-cdef-0123-456789abcdef
+                    </div>
+                    
+                    <div class="warning-box">
+                        <h4>⚠️ Important</h4>
+                        <p>Keep this connection string secure! It's used to send telemetry data to Azure.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Get Application ID</h3>
+                    <p><strong>From your Application Insights resource:</strong></p>
+                    <ol>
+                        <li>In the left menu, click <strong>"API Access"</strong></li>
+                        <li>Copy the <strong>"Application ID"</strong> at the top</li>
+                    </ol>
+                    
+                    <div class="code-block">
+Application ID: 01234567-89ab-cdef-0123-456789abcdef
+                    </div>
+                    
+                    <div class="screenshot-placeholder">
+                        📸 Screenshot: Application Insights > API Access > Application ID
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Create API Key</h3>
+                    <p><strong>Still in the API Access page:</strong></p>
+                    <ol>
+                        <li>Click <strong>"Create API Key"</strong> button</li>
+                        <li>Enter a name: <code>Dashboard-API-Key</code></li>
+                        <li>Select permissions: <strong>✅ Read telemetry</strong></li>
+                        <li>Click <strong>"Generate key"</strong></li>
+                        <li><strong>IMMEDIATELY COPY THE KEY</strong> - you won't see it again!</li>
+                    </ol>
+                    
+                    <div class="code-block">
+API Key: abc123def456ghi789jkl012mno345pqr678stu
+                    </div>
+                    
+                    <div class="warning-box">
+                        <h4>🔒 Critical</h4>
+                        <p>Copy the API key immediately! Azure only shows it once. If you lose it, you'll need to create a new one.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Configure Environment Variables</h3>
+                    <p><strong>Create or update your .env file:</strong></p>
+                    
+                    <div class="code-block">
+# Application Insights Configuration
+APPINSIGHTS_CONNECTION_STRING=InstrumentationKey=01234567-89ab-cdef-0123-456789abcdef;IngestionEndpoint=https://polandcentral-0.in.applicationinsights.azure.com/;LiveEndpoint=https://polandcentral.livediagnostics.monitor.azure.com/;ApplicationId=01234567-89ab-cdef-0123-456789abcdef
+
+APP_INSIGHTS_APP_ID=01234567-89ab-cdef-0123-456789abcdef
+
+APP_INSIGHTS_API_KEY=abc123def456ghi789jkl012mno345pqr678stu
+
+# Optional
+PORT=3000
+NODE_ENV=development
+                    </div>
+                    
+                    <p><strong>Replace the example values with your actual:</strong></p>
+                    <ul>
+                        <li>Connection string from Step 2</li>
+                        <li>Application ID from Step 3</li>
+                        <li>API Key from Step 4</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3>Test Your Configuration</h3>
+                    <p><strong>Start the application and verify:</strong></p>
+                    
+                    <div class="code-block">
+npm start
+                    </div>
+                    
+                    <p><strong>Look for these success messages:</strong></p>
+                    <div class="code-block">
+✅ Application Insights initialized successfully
+🚀 Azure Monitor Dashboard STARTED
+⚙️ Configuration Status:
+   APPINSIGHTS_CONNECTION_STRING: ✅ SET
+   APP_INSIGHTS_APP_ID: ✅ SET  
+   APP_INSIGHTS_API_KEY: ✅ SET
+                    </div>
+                    
+                    <div class="success-box">
+                        <h4>✅ Success Indicators</h4>
+                        <ul>
+                            <li>Server starts without errors</li>
+                            <li>All configuration shows ✅ SET</li>
+                            <li>Dashboard loads at <code>http://localhost:3000</code></li>
+                            <li>Status shows "Connected" (not "Connecting...")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <h3>Generate Test Data</h3>
+                    <p><strong>Create some telemetry to see in your dashboard:</strong></p>
+                    
+                    <ol>
+                        <li><strong>Click "Trigger Error"</strong> button 3-5 times</li>
+                        <li><strong>Click "Slow Endpoint"</strong> button 3-5 times</li>
+                        <li><strong>Click "Health Check"</strong> button 3-5 times</li>
+                        <li><strong>Wait 2-5 minutes</strong> for data to appear in Application Insights</li>
+                        <li><strong>Click "Refresh"</strong> to update charts</li>
+                    </ol>
+                    
+                    <div class="success-box">
+                        <h4>📈 Expected Results</h4>
+                        <ul>
+                            <li>Charts show data points (not flat lines)</li>
+                            <li>Statistics cards show numbers > 0</li>
+                            <li>Status changes to "Connected"</li>
+                            <li>No "Using sample data" warnings</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">8</div>
+                <div class="step-content">
+                    <h3>Troubleshooting</h3>
+                    
+                    <div class="warning-box">
+                        <h4>🔧 Common Issues</h4>
+                        
+                        <p><strong>Charts are empty/flat:</strong></p>
+                        <ul>
+                            <li>Wait 2-5 minutes for Application Insights data processing</li>
+                            <li>Generate more test data using the buttons</li>
+                            <li>Check Azure Portal → Application Insights → Logs for data</li>
+                        </ul>
+                        
+                        <p><strong>"Using sample data" message:</strong></p>
+                        <ul>
+                            <li>Check API key has "Read telemetry" permission</li>
+                            <li>Verify Application ID is correct</li>
+                            <li>Ensure API key hasn't expired</li>
+                        </ul>
+                        
+                        <p><strong>Connection errors:</strong></p>
+                        <ul>
+                            <li>Verify internet connection</li>
+                            <li>Check connection string format</li>
+                            <li>Ensure Application Insights resource exists</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="setup-card">
+            <div class="setup-header">
+                <h2>🎉 You're All Set!</h2>
+                <p>Your Application Insights Dashboard is now ready to monitor your applications.</p>
+                <a href="/" class="btn btn-success" style="display: inline-block; margin-top: 15px; text-decoration: none;">
+                    🚀 Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
