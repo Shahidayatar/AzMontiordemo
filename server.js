@@ -48,10 +48,30 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Request logging middleware
+// Request logging middleware with custom telemetry
 app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
     console.log(`📥 ${timestamp} ${req.method} ${req.url}`);
+    
+    // Track custom event for each request
+    if (appInsights.defaultClient) {
+        appInsights.defaultClient.trackEvent({
+            name: 'PageView',
+            properties: {
+                path: req.url,
+                method: req.method,
+                userAgent: req.headers['user-agent'],
+                timestamp: timestamp
+            }
+        });
+        
+        // Track custom metric for request rate
+        appInsights.defaultClient.trackMetric({
+            name: 'RequestRate',
+            value: 1
+        });
+    }
+    
     next();
 });
 
@@ -133,6 +153,23 @@ app.get('/setup-guide.html', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+    // Track custom event
+    if (appInsights.defaultClient) {
+        appInsights.defaultClient.trackEvent({
+            name: 'HealthCheck',
+            properties: {
+                status: 'healthy',
+                appInsightsEnabled: !!process.env.APPINSIGHTS_CONNECTION_STRING
+            }
+        });
+        
+        // Track custom metric for health check response time
+        appInsights.defaultClient.trackMetric({
+            name: 'HealthCheckResponseTime',
+            value: 50 // milliseconds
+        });
+    }
+    
     res.json({ 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
@@ -161,9 +198,115 @@ app.get('/error', (req, res) => {
 app.get('/slow', async (req, res) => {
     const delay = Math.random() * 3000 + 1000; // Random delay between 1-4 seconds
     await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Track custom event for slow request
+    if (appInsights.defaultClient) {
+        appInsights.defaultClient.trackEvent({
+            name: 'SlowRequest',
+            properties: {
+                delay: Math.round(delay),
+                endpoint: '/slow'
+            }
+        });
+        
+        // Track custom metric
+        appInsights.defaultClient.trackMetric({
+            name: 'EndpointDelay',
+            value: delay
+        });
+    }
+    
     res.json({ 
         message: 'This endpoint simulates slow response times',
         delay: Math.round(delay) + 'ms'
+    });
+});
+
+// Generate sample telemetry endpoint
+app.get('/generate-telemetry', (req, res) => {
+    if (!appInsights.defaultClient) {
+        return res.status(503).json({ 
+            error: 'Application Insights not initialized',
+            message: 'Please configure APPINSIGHTS_CONNECTION_STRING'
+        });
+    }
+    
+    const client = appInsights.defaultClient;
+    
+    // 1. Track Custom Event
+    client.trackEvent({
+        name: 'UserAction',
+        properties: {
+            action: 'ButtonClick',
+            buttonName: 'GenerateTelemetry',
+            userId: 'user-' + Math.floor(Math.random() * 100),
+            sessionId: 'session-' + Date.now()
+        }
+    });
+    
+    // 2. Track Custom Metric
+    client.trackMetric({
+        name: 'ApiCallDuration',
+        value: Math.random() * 500 + 100 // Random value between 100-600ms
+    });
+    
+    client.trackMetric({
+        name: 'ActiveUsers',
+        value: Math.floor(Math.random() * 50) + 10 // Random value between 10-60
+    });
+    
+    // 3. Track Trace (Log)
+    client.trackTrace({
+        message: '✅ Sample telemetry generated successfully',
+        severity: appInsights.Contracts.SeverityLevel.Information,
+        properties: {
+            source: 'TelemetryGenerator',
+            timestamp: new Date().toISOString()
+        }
+    });
+    
+    // 4. Track Dependency (simulated external API call)
+    client.trackDependency({
+        target: 'external-api.example.com',
+        name: 'GET /api/data',
+        data: 'https://external-api.example.com/api/data',
+        duration: Math.random() * 300 + 50,
+        resultCode: 200,
+        success: true,
+        dependencyTypeName: 'HTTP'
+    });
+    
+    // 5. Track a warning trace
+    client.trackTrace({
+        message: '⚠️ This is a sample warning message',
+        severity: appInsights.Contracts.SeverityLevel.Warning,
+        properties: {
+            warningType: 'SampleWarning',
+            component: 'TelemetryGenerator'
+        }
+    });
+    
+    // Flush to ensure data is sent immediately
+    client.flush();
+    
+    res.json({ 
+        success: true,
+        message: 'Sample telemetry generated! Check Azure Portal in 2-3 minutes.',
+        telemetryGenerated: {
+            customEvents: 1,
+            customMetrics: 2,
+            traces: 2,
+            dependencies: 1
+        },
+        instructions: {
+            azurePortal: 'Go to Azure Portal → Your Application Insights → Logs',
+            queries: [
+                'customEvents | where timestamp > ago(1h) | order by timestamp desc',
+                'customMetrics | where timestamp > ago(1h) | order by timestamp desc',
+                'traces | where timestamp > ago(1h) | order by timestamp desc',
+                'dependencies | where timestamp > ago(1h) | order by timestamp desc'
+            ]
+        }
     });
 });
 
@@ -320,7 +463,119 @@ app.get('/stats', async (req, res) => {
     }
 });
 
-
+// API endpoint to get logs (traces, exceptions, custom events)
+app.get('/logs', async (req, res) => {
+    console.log('📝 /logs endpoint called');
+    
+    try {
+        const limit = req.query.limit || 50;
+        const severityLevel = req.query.severity || 'all';
+        
+        // Build severity filter
+        let severityFilter = '';
+        if (severityLevel !== 'all') {
+            severityFilter = `| where severityLevel == ${severityLevel}`;
+        }
+        
+        // Query for traces (logs)
+        const tracesQuery = `
+            traces
+            | where timestamp > ago(24h)
+            ${severityFilter}
+            | project timestamp, message, severityLevel, operation_Name, customDimensions
+            | order by timestamp desc
+            | limit ${limit}
+        `;
+        
+        // Query for exceptions
+        const exceptionsQuery = `
+            exceptions
+            | where timestamp > ago(24h)
+            | project timestamp, type, outerMessage, innermostMessage, severityLevel, operation_Name
+            | order by timestamp desc
+            | limit ${limit}
+        `;
+        
+        // Query for custom events
+        const customEventsQuery = `
+            customEvents
+            | where timestamp > ago(24h)
+            | project timestamp, name, customDimensions
+            | order by timestamp desc
+            | limit ${limit}
+        `;
+        
+        // Query for log summary by severity
+        const logSummaryQuery = `
+            union traces, exceptions
+            | where timestamp > ago(24h)
+            | summarize Count = count() by severityLevel
+            | order by severityLevel asc
+        `;
+        
+        console.log('📝 Executing 4 parallel log queries...');
+        const [tracesData, exceptionsData, customEventsData, logSummaryData] = await Promise.all([
+            queryApplicationInsights(tracesQuery),
+            queryApplicationInsights(exceptionsQuery),
+            queryApplicationInsights(customEventsQuery),
+            queryApplicationInsights(logSummaryQuery)
+        ]);
+        
+        // Process traces
+        const traces = tracesData.tables[0]?.rows.map(row => ({
+            timestamp: row[0],
+            message: row[1],
+            severityLevel: row[2],
+            operation: row[3],
+            customDimensions: row[4]
+        })) || [];
+        
+        // Process exceptions
+        const exceptions = exceptionsData.tables[0]?.rows.map(row => ({
+            timestamp: row[0],
+            type: row[1],
+            outerMessage: row[2],
+            innermostMessage: row[3],
+            severityLevel: row[4],
+            operation: row[5]
+        })) || [];
+        
+        // Process custom events
+        const customEvents = customEventsData.tables[0]?.rows.map(row => ({
+            timestamp: row[0],
+            name: row[1],
+            customDimensions: row[2]
+        })) || [];
+        
+        // Process log summary
+        const logSummary = logSummaryData.tables[0]?.rows.map(row => ({
+            severityLevel: row[0],
+            count: row[1]
+        })) || [];
+        
+        const logs = {
+            traces: traces,
+            exceptions: exceptions,
+            customEvents: customEvents,
+            summary: logSummary
+        };
+        
+        console.log('📝 Returning logs:', {
+            tracesCount: traces.length,
+            exceptionsCount: exceptions.length,
+            customEventsCount: customEvents.length
+        });
+        
+        res.json(logs);
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch log data',
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
 
 // Error handling middleware
 app.use((error, req, res, next) => {
